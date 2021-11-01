@@ -8,6 +8,7 @@
 #include <chrono>      
 #include <memory>
 #include <optional>
+#include <unordered_map>
 
 constexpr int boardDimentions = 3;
 
@@ -162,16 +163,84 @@ public:
 	AI(Symbol symbol) :Player(symbol) {};
 	void MakeTurn(Cells& cells) override
 	{
+		//if there is a guaranteed win - take it
+		auto winningTurn = CheckWinningTurns(cells);
+		if (winningTurn)
+		{
+			cells[winningTurn.value()] = mySymbol;
+			return;
+		}
+		//if middle is empty - place there
 		int middle = boardDimentions * boardDimentions / 2;
 		if (cells[middle] == Symbol::Empty)
 		{
 			cells[middle] = mySymbol;
 			return;
 		}
+		//if enemy is about to win - block them
+		auto blockingTurn = CheckBlockingTurns(cells);
+		if (blockingTurn)
+		{
+			cells[blockingTurn.value()] = mySymbol;
+			return;
+		}
+		//place in a corner
+		auto corner = FindEmptyCorner(cells);
+		if (corner)
+		{
+			cells[corner.value()] = mySymbol;
+			return;
+		}
+		//place anywhere
+		for (auto& cell : cells)
+		{
+			if (cell == Symbol::Empty) cell = mySymbol;
+			break;
+		}
 	}
-	std::optional<int> CheckWinningPotential(Cells& cells)
+	std::optional<int> CheckWinningTurns(Cells& cells)
 	{
-
+		return CheckTurns(cells, [this](std::unordered_map<Symbol, int>& lineData) {return lineData[this->mySymbol] == boardDimentions - 1 && lineData[Symbol::Empty] == 1; });
+	}
+	std::optional<int> CheckBlockingTurns(Cells& cells)
+	{
+		return CheckTurns(cells, [this](std::unordered_map<Symbol, int>& lineData) {return lineData[this->mySymbol] == 0 && lineData[Symbol::Empty] == 1; });
+	}
+	std::optional<int>CheckTurns(Cells& cells, auto DecidingPredicate)			//DecidingPredicate checks if there is a good placing spot in this row/column, or not
+	{
+		for (int i = 0; i < boardDimentions; i++)
+		{
+			std::unordered_map<Symbol, int> horizontalSymbolCounts;
+			std::unordered_map<Symbol, int> verticalSymbolCounts;
+			for (int j = 0; j < boardDimentions; j++)
+			{
+				horizontalSymbolCounts[cells[j + i * boardDimentions]]++;
+				verticalSymbolCounts[cells[i + j * boardDimentions]]++;
+			}
+			if (DecidingPredicate(horizontalSymbolCounts))			//placing here will result in a win
+			{
+				for (int j = 0; j < boardDimentions; j++)
+				{
+					if (cells[j + i * boardDimentions] == Symbol::Empty)return { j + i * boardDimentions };
+				}
+			}
+			if (DecidingPredicate(verticalSymbolCounts))			//placing here will result in a win
+			{
+				for (int j = 0; j < boardDimentions; j++)
+				{
+					if (cells[i + j * boardDimentions] == Symbol::Empty)return { i + j * boardDimentions };
+				}
+			}
+		}
+		return{};
+	}
+	std::optional<int>FindEmptyCorner(Cells& cells)
+	{
+		if (cells[0] == Symbol::Empty)										return{ 0 };
+		if (cells[boardDimentions - 1] == Symbol::Empty)					return { boardDimentions - 1 };
+		if(cells[(boardDimentions - 1) * boardDimentions] == Symbol::Empty) return { (boardDimentions - 1) * boardDimentions };
+		if (cells[boardDimentions * boardDimentions - 1] == Symbol::Empty)  return { boardDimentions * boardDimentions - 1 };
+																			return{};
 	}
 };
 
