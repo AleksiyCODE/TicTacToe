@@ -48,6 +48,27 @@ auto VerticalChecker = [](const Cells& cells, int column) -> Symbol
 	return winner;
 };
 
+auto DiagonalChecker = [](const Cells& cells)->Symbol
+{
+	Symbol majorWinner = cells[0];
+	Symbol minorWinner = cells[boardDimentions - 1];
+	for (int i = 0; i < boardDimentions; i++)
+	{
+		if (cells[i * boardDimentions + i] != majorWinner)
+		{
+			majorWinner = Symbol::Empty;
+		}
+		if (cells[(boardDimentions - i - 1) + i * boardDimentions] != minorWinner)
+		{
+			minorWinner = Symbol::Empty;
+		}
+	}
+	if (majorWinner != Symbol::Empty)
+		return majorWinner;
+	else
+		return minorWinner;
+};
+
 class Board
 {
 public:	
@@ -118,10 +139,13 @@ private:
 		{
 			Symbol horizontalWinner = HorizontalChecker(cells, i);
 			Symbol verticalWinner = VerticalChecker(cells, i);
+			Symbol diagonalWinner = DiagonalChecker(cells);
 			if (horizontalWinner != Symbol::Empty)
 				return horizontalWinner;
 			if (verticalWinner != Symbol::Empty)
 				return verticalWinner;
+			if (diagonalWinner != Symbol::Empty)
+				return diagonalWinner;
 		}
 		return Symbol::Empty;
 	}
@@ -208,8 +232,13 @@ public:
 	}
 	std::optional<int>CheckTurns(Cells& cells, auto DecidingPredicate)			//DecidingPredicate checks if there is a good placing spot in this row/column, or not
 	{
+		std::unordered_map<Symbol, int> majorDiagonalSymbolCounts;
+		std::unordered_map<Symbol, int> minorDiagonalSymbolCounts;
 		for (int i = 0; i < boardDimentions; i++)
 		{
+			majorDiagonalSymbolCounts[cells[i * boardDimentions + i]]++;
+			minorDiagonalSymbolCounts[cells[(boardDimentions - i - 1) + i * boardDimentions]]++;
+
 			std::unordered_map<Symbol, int> horizontalSymbolCounts;
 			std::unordered_map<Symbol, int> verticalSymbolCounts;
 			for (int j = 0; j < boardDimentions; j++)
@@ -230,6 +259,20 @@ public:
 				{
 					if (cells[i + j * boardDimentions] == Symbol::Empty)return { i + j * boardDimentions };
 				}
+			}
+		}
+		if (DecidingPredicate(majorDiagonalSymbolCounts))			//placing here will result in a win
+		{
+			for (int i = 0; i < boardDimentions; i++)
+			{
+				if (cells[i * boardDimentions + i] == Symbol::Empty)return { i * boardDimentions + i };
+			}
+		}
+		if (DecidingPredicate(minorDiagonalSymbolCounts))			//placing here will result in a win
+		{
+			for (int i = 0; i < boardDimentions; i++)
+			{
+				if (cells[(boardDimentions - i - 1) + i * boardDimentions] == Symbol::Empty)return { (boardDimentions - i - 1) + i * boardDimentions };
 			}
 		}
 		return{};
@@ -297,16 +340,3 @@ int main()
 	}
 	return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
