@@ -246,14 +246,14 @@ public:
 				horizontalSymbolCounts[cells[j + i * boardDimentions]]++;
 				verticalSymbolCounts[cells[i + j * boardDimentions]]++;
 			}
-			if (DecidingPredicate(horizontalSymbolCounts))			//placing here will result in a win
+			if (DecidingPredicate(horizontalSymbolCounts))			
 			{
 				for (int j = 0; j < boardDimentions; j++)
 				{
 					if (cells[j + i * boardDimentions] == Symbol::Empty)return { j + i * boardDimentions };
 				}
 			}
-			if (DecidingPredicate(verticalSymbolCounts))			//placing here will result in a win
+			if (DecidingPredicate(verticalSymbolCounts))			
 			{
 				for (int j = 0; j < boardDimentions; j++)
 				{
@@ -261,21 +261,21 @@ public:
 				}
 			}
 		}
-		if (DecidingPredicate(majorDiagonalSymbolCounts))			//placing here will result in a win
+		if (DecidingPredicate(majorDiagonalSymbolCounts))			
 		{
 			for (int i = 0; i < boardDimentions; i++)
 			{
 				if (cells[i * boardDimentions + i] == Symbol::Empty)return { i * boardDimentions + i };
 			}
 		}
-		if (DecidingPredicate(minorDiagonalSymbolCounts))			//placing here will result in a win
+		if (DecidingPredicate(minorDiagonalSymbolCounts))			
 		{
 			for (int i = 0; i < boardDimentions; i++)
 			{
 				if (cells[(boardDimentions - i - 1) + i * boardDimentions] == Symbol::Empty)return { (boardDimentions - i - 1) + i * boardDimentions };
 			}
 		}
-		return{};
+		return{};			//no preferable place found
 	}
 	std::optional<int>FindEmptyCorner(Cells& cells)
 	{
@@ -283,7 +283,7 @@ public:
 		if (cells[boardDimentions - 1] == Symbol::Empty)					return { boardDimentions - 1 };
 		if(cells[(boardDimentions - 1) * boardDimentions] == Symbol::Empty) return { (boardDimentions - 1) * boardDimentions };
 		if (cells[boardDimentions * boardDimentions - 1] == Symbol::Empty)  return { boardDimentions * boardDimentions - 1 };
-																			return{};
+																			return {};
 	}
 };
 
