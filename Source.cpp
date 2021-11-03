@@ -218,8 +218,11 @@ public:
 		//place anywhere
 		for (auto& cell : cells)
 		{
-			if (cell == Symbol::Empty) cell = mySymbol;
-			break;
+			if (cell == Symbol::Empty)
+			{
+				cell = mySymbol;
+				return;
+			}
 		}
 	}
 	std::optional<int> CheckWinningTurns(Cells& cells)
